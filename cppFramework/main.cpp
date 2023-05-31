@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
       timequick += std::chrono::system_clock::now() - start;
       
       // verify: Die forlgende Zeile muss auskommentiert werden, um den neuen Algorithmus auf Korrektheit zu prüfen
-       //assert(verifier.verify(elements, value, q));
+      assert(verifier.verify(elements, value, q));
     }
 
     std::cout << arraySize << " " << timeslow.count() / noOfRuns << "  "

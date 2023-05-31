@@ -3,74 +3,79 @@
 #include <random>
 #include <cassert>
 #include <iostream>
+#include <stack>
 int WeightedSelectionAlgorithm::weightedSelectionAlgorithm(std::vector<Element> &elements, double q) {
 //TODO: your Algorithm implementation goes here to calculate the qValue:
-  std::random_device auri;
-  std::mt19937 gen(auri());
-  std::uniform_int_distribution<> distr(0, elements.size()-1);
-  int pivot = distr(gen); //This selects a semi-random element of elements. I have not figured out how to make it truly random.
-  int qValue = elements[pivot].getValue();
-  int weight = elements[pivot].getWeight();
+  int qValue = elements[0].getValue();
+  int weight = elements[0].getWeight();
   int lowerThanWeight = 0;
   int largerThanWeight = 0;
   int totalWeight = 0;
 
-  std::vector<Element> smol;
-  std::vector<Element> big;
+  std::stack<Element> smol;
+  std::stack<Element> big;
+  std::stack<Element> current;
 
   //splits up the original vector smaller and bigger Vectors and calculates the corresponding Weights
-  for (int i = 0; i < elements.size(); i++) {
+  for (int i = 0; i < elements.size(); i++) {//going through the elements
     if (elements[i].getValue() < qValue) {
       lowerThanWeight += elements[i].getWeight();
-      smol.push_back(elements[i]);
+      smol.push(elements[i]);//sorting by big and smol
     } else if (elements[i].getValue() > qValue) {
-      big.push_back(elements[i]);
+      big.push(elements[i]);
       largerThanWeight += elements[i].getWeight();
     }
   }
-  totalWeight = lowerThanWeight + largerThanWeight + weight;
-  //While loop ends when result is found
+  totalWeight = lowerThanWeight + largerThanWeight + weight;//calculate total weight
   while (1)
   {
-    if (largerThanWeight + weight <= (1-q)*totalWeight){
+    if (largerThanWeight + weight <= (1-q)*totalWeight){ //Value needs to be lower
       largerThanWeight += weight;
-      big.clear();
-      for (int i = 0; i < smol.size(); i++){
-        if (smol[i].getValue() > qValue) {
-          big.push_back(smol[i]);
-         // std::cout << smol[i].getqValue()-value << std::endl;
-          smol.erase(smol.begin()+i);//deletes the element i
-          largerThanWeight += smol[i].getWeight();
-          lowerThanWeight -= smol[i].getWeight();
-          i--;
-        }
+      current.swap(smol);
+      qValue = current.top().getValue();
+      weight = current.top().getWeight();
+      current.pop();
+      while (!big.empty()){
+        big.pop();
       }
-      std::uniform_int_distribution<> distr(0, smol.size()-1);
-      int pivot = distr(gen);
+      while(!current.empty()){
+        if (current.top().getValue() > qValue) {
+          big.push(current.top());
+          largerThanWeight += current.top().getWeight();
+          lowerThanWeight -= current.top().getWeight();
+        }
+        else{
+          smol.push(current.top());
+        }
+        current.pop();
+      }
       lowerThanWeight -= weight;
     }
-    else if (lowerThanWeight + weight < q*totalWeight){
-      smol.clear();
+    else if (lowerThanWeight + weight < q*totalWeight){ //Value needs to be higher
       lowerThanWeight += weight;
-      for (int i = 0; i < big.size()&& i!=pivot; i++){
-        if (big[i].getValue() < qValue) {
-          smol.push_back(big[i]);
-          //std::cout << smol[i].getqValue()-value << "i" << std::endl;
-          big.erase(big.begin()+i);//deletes the element i
-          largerThanWeight -= big[i].getWeight();
-          lowerThanWeight += big[i].getWeight();
-          i--;
-        }
+      current.swap(big);
+      qValue = current.top().getValue();
+      weight = current.top().getWeight();
+      current.pop();
+      while (!smol.empty()){
+        smol.pop();
       }
-      std::uniform_int_distribution<> distr(0, big.size()-1);
-      int pivot = distr(gen);
-      qValue = big[pivot].getValue();
-      weight = big[pivot].getWeight();
+      while(!current.empty()){
+        if (current.top().getValue() < qValue) {
+          smol.push(current.top());
+          largerThanWeight -= current.top().getWeight();
+          lowerThanWeight += current.top().getWeight();
+        }
+        else{
+          big.push(current.top());
+        }
+        current.pop();
+      }
       largerThanWeight -= weight;
     } 
     else{
       break;
     }
-  }
+  } 
   return qValue;
 }
