@@ -1,81 +1,39 @@
 #include "WeightedSelectionAlgorithm.h"
 #include <vector>
 #include <random>
-#include <cassert>
-#include <iostream>
-#include <stack>
+
 int WeightedSelectionAlgorithm::weightedSelectionAlgorithm(std::vector<Element> &elements, double q) {
 //TODO: your Algorithm implementation goes here to calculate the qValue:
-  int qValue = elements[0].getValue();
-  int weight = elements[0].getWeight();
-  int lowerThanWeight = 0;
-  int largerThanWeight = 0;
-  int totalWeight = 0;
+  
+  unsigned int size = elements.size();
 
-  std::stack<Element> smol;
-  std::stack<Element> big;
-  std::stack<Element> current;
+  // pick pivot p uniformly at random
+  std::random_device rd;
+  std::mt19937 generator(rd());
+  std::uniform_int_distribution<int> distrib(0, size - 1);
+  Element pivot = elements[distrib(generator)]; // TODO: could pre-store value & maybe weight
 
-  //splits up the original vector smaller and bigger Vectors and calculates the corresponding Weights
-  for (int i = 0; i < elements.size(); i++) {//going through the elements
-    if (elements[i].getValue() < qValue) {
-      lowerThanWeight += elements[i].getWeight();
-      smol.push(elements[i]);//sorting by big and smol
-    } else if (elements[i].getValue() > qValue) {
-      big.push(elements[i]);
-      largerThanWeight += elements[i].getWeight();
+  // compute a and b + sum of weights of elements in a, b and total
+  std::vector<Element> a, b;
+  unsigned int weightSum_a = 0, weightSum_b = 0, weightSum_tot = 0;
+  for (Element &e : elements) { // TODO: there might be a more efficient way to do this
+    if ( e.getValue() < pivot.getValue() ) {
+      a.push_back(e);
+      weightSum_a += e.getWeight();
+    } else if ( e.getValue() > pivot.getValue() ) {
+      b.push_back(e);
+      weightSum_b += e.getWeight();
     }
+    weightSum_tot += e.getWeight(); // TODO: could compute at the and as sum_a + sum_b + pivot weight and * q because only used such later
   }
-  totalWeight = lowerThanWeight + largerThanWeight + weight;//calculate total weight
-  while (1)
-  {
-    if (largerThanWeight + weight <= (1-q)*totalWeight){ //Value needs to be lower
-      largerThanWeight += weight;
-      current.swap(smol);
-      qValue = current.top().getValue();
-      weight = current.top().getWeight();
-      current.pop();
-      while (!big.empty()){
-        big.pop();
-      }
-      while(!current.empty()){
-        if (current.top().getValue() > qValue) {
-          big.push(current.top());
-          largerThanWeight += current.top().getWeight();
-          lowerThanWeight -= current.top().getWeight();
-        }
-        else{
-          smol.push(current.top());
-        }
-        current.pop();
-      }
-      lowerThanWeight -= weight;
-    }
-    else if (lowerThanWeight + weight < q*totalWeight){ //Value needs to be higher
-      lowerThanWeight += weight;
-      current.swap(big);
-      qValue = current.top().getValue();
-      weight = current.top().getWeight();
-      current.pop();
-      while (!smol.empty()){
-        smol.pop();
-      }
-      while(!current.empty()){
-        if (current.top().getValue() < qValue) {
-          smol.push(current.top());
-          largerThanWeight -= current.top().getWeight();
-          lowerThanWeight += current.top().getWeight();
-        }
-        else{
-          big.push(current.top());
-        }
-        current.pop();
-      }
-      largerThanWeight -= weight;
-    } 
-    else{
-      break;
-    }
-  } 
-  return qValue;
+
+  if (weightSum_a > q * weightSum_tot) { // TODO: casting successfull? same down there..
+    return WeightedSelectionAlgorithm::weightedSelectionAlgorithm(a, q * weightSum_tot / weightSum_a);
+  }
+
+  if (weightSum_a + pivot.getWeight() >= q * weightSum_tot) {
+    return pivot.getValue();
+  }
+
+  return WeightedSelectionAlgorithm::weightedSelectionAlgorithm(b, (q * weightSum_tot - weightSum_a - pivot.getWeight()) / weightSum_b); // TODO: line shift
 }
