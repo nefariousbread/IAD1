@@ -38,16 +38,12 @@ class graph {
 
 void DFS(NodeID v, graph& G, std::vector<bool>& marked) {
         // simple Depth-First-Search based on lecture (pp. 360)
-        // std::cout << "DFS from " << v + 1 << " to.." <<std::endl;
         for(NodeID w : G.adj_list[v]) {
-                // std::cout << w + 1 << std::flush;
                 if (! marked[w]) {
-                        // std::cout << " -> " << std::flush;
                         marked[w] = true;
                         DFS(w, G, marked);
 
                 }
-                // std::cout << " backtrack " << v + 1 << std::endl;
         }
 }
 
@@ -57,7 +53,6 @@ bool is_strongly_connected(graph & G) {
 
     // for all nodes, check if the vertex is connected
     for(NodeID s = 0; s < G.n; ++s) {
-        // std::cout << "s = " << s + 1 << std::endl;
 
         // initialize vector with marks (parent vector of DFS not needed because no backtracking necessary) 
         std::vector<bool> marked(G.n, false);
@@ -67,15 +62,11 @@ bool is_strongly_connected(graph & G) {
         DFS(s, G, marked);
 
         // check if all nodes were reached
-        // int i = 1;
         for(bool mark : marked) {
                 if (! mark) {
-                        // std::cout << "Missing path: " << s+1 << " -> " << i << std::endl;
                         return false;
                 }
-                // ++i;
         }
-        // std::cout << "No missing path detected!\n" << std::endl; 
     }
 
     // all nodes have been reached from all starting nodes
